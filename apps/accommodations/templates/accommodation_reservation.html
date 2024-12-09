@@ -1,0 +1,261 @@
+{% extends layout_path %}
+
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="container-fluid mt-5">
+  <h1 class="text-center mb-4" style="font-weight: 600; color: #333;">My Reservations</h1>
+
+  {% if reservations %}
+  <div class="row">
+    {% for reservation in reservations %}
+    <div class="col-12 mb-4">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        
+        <!-- Card Header with Overlay -->
+        <div class="card-overlay p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="card-title mb-1">{{ reservation.accommodation_name }}</h5>
+            <span class="small">{{ reservation.accommodation_location }}</span>
+          </div>
+          <!-- Action Buttons (Icons) on the Right -->
+          <div class="d-flex">
+            <button class="btn btn-light btn-sm me-2" title="Update Reservation" onclick="openUpdateModal('{{ reservation.id }}')">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm" title="Delete Reservation" onclick="confirmDelete('{{ reservation.id }}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card Body with Elegant Info List -->
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Accommodation Type -->
+            <div class="col-md-6">
+              <div class="p-2 border rounded bg-light d-flex align-items-center">
+                <i class="bi bi-house-fill text-secondary me-2"></i>
+                <span><strong>Accommodation:</strong> {{ reservation.accommodation_type }}</span>
+              </div>
+            </div>
+            
+            <!-- Guests -->
+            <div class="col-md-6">
+              <div class="p-2 border rounded bg-light d-flex align-items-center">
+                <i class="bi bi-people-fill text-secondary me-2"></i>
+                <span><strong>Guests:</strong> {{ reservation.num_guests }}</span>
+              </div>
+            </div>
+        
+            <!-- Start and End Dates, side by side -->
+            <div class="col-md-6">
+              <div class="p-2 border rounded bg-light d-flex align-items-center">
+                <i class="bi bi-calendar-event text-secondary me-2"></i>
+                <span><strong>Start Date:</strong> {{ reservation.start_date }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-2 border rounded bg-light d-flex align-items-center">
+                <i class="bi bi-calendar-event text-secondary me-2"></i>
+                <span><strong>End Date:</strong> {{ reservation.end_date }}</span>
+              </div>
+            </div>
+        
+            <!-- Phone -->
+            <div class="col-md-6">
+              <div class="p-2 border rounded bg-light d-flex align-items-center">
+                <i class="bi bi-telephone text-secondary me-2"></i>
+                <span><strong>Phone:</strong> {{ reservation.phone }}</span>
+              </div>
+            </div>
+        
+            <!-- Booking Date -->
+            <div class="col-md-6">
+              <div class="p-2 border rounded bg-light d-flex align-items-center">
+                <i class="bi bi-clock text-secondary me-2"></i>
+                <span><strong>Booked On:</strong> {{ reservation.created_at|date:"F j, Y, g:i a" }}</span>
+              </div>
+            </div>
+        
+            <!-- Total Price with green background -->
+            <div class="d-flex justify-content-end mt-3">
+              <div class="col-md-12">
+                <div class="p-2 border rounded bg-success text-white d-flex align-items-center justify-content-between">
+                  <i class="bi bi-currency-dollar me-2"></i>
+                  <span><strong>Total Price:</strong> {{ reservation.total_price }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted text-center mt-5">You have no reservations at the moment.</p>
+  {% endif %}
+</div>
+
+
+
+
+
+
+
+          <!-- Update Reservation Modal -->
+          <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="updateModalLabel">Update Reservation</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <!-- Additional Reservation Details -->
+                  <div id="reservationDetails" class="mb-4 card ms-2 p-3">
+                    <p><strong>Accommodation Name:</strong> <span id="accommodationName"></span></p>
+                    <p><strong>Location:</strong> <span id="accommodationLocation"></span></p>
+                    <p><strong>Phone:</strong> <span id="accommodationPhone"></span></p>
+                    <p><strong>Type:</strong> <span id="accommodationType"></span></p>
+                  </div>
+                  <form id="updateForm">
+                    <input type="hidden" id="reservationId" name="reservationId">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="reservation_start_date" class="form-label">Reservation Start Date</label>
+                        <input type="date" class="form-control" id="reservation_start_date" name="reservation_start_date" required>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="reservation_end_date" class="form-label">Reservation End Date</label>
+                        <input type="date" class="form-control" id="reservation_end_date" name="reservation_end_date" required>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label for="numGuests" class="form-label">Number of Guests</label>
+                      <input type="number" class="form-control" id="numGuests" name="num_guests" min="1" required>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="updateReservation()">Save changes</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+
+      <!-- Delete Confirmation Dialog -->
+      <div id="deleteConfirm" style="display: none;">
+        <p>Are you sure you want to delete this reservation?</p>
+        <button class="btn btn-danger" onclick="deleteReservation()">Yes</button>
+        <button class="btn btn-secondary" onclick="cancelDelete()">Cancel</button>
+      </div>
+
+
+
+
+
+
+
+
+<script>
+  function openUpdateModal(id) {
+    // Set reservation ID in the hidden input
+    document.getElementById('reservationId').value = id;
+  
+    // Fetch reservation data to populate the modal
+    fetch(`/accommodations/reservation/${id}/get`, {  // Use 'GET' endpoint to fetch data
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Populate the fields with the fetched data
+        document.getElementById('reservation_start_date').value = data.start_date;
+        document.getElementById('reservation_end_date').value = data.end_date;
+
+        document.getElementById('numGuests').value = data.num_guests;
+
+         // Populate additional reservation details
+          document.getElementById('accommodationName').textContent = data.accommodation_name;
+          document.getElementById('accommodationLocation').textContent = data.accommodation_location;
+          document.getElementById('accommodationPhone').textContent = data.phone;
+          document.getElementById('accommodationType').textContent = data.accommodation_type;
+  
+        // Open the modal using Bootstrap's modal API
+        const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+        updateModal.show();
+      } else {
+        alert('Error fetching reservation details');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching reservation data:', error);
+      alert('Failed to fetch reservation details. Please try again.');
+    });
+  }
+  
+  
+   function updateReservation() {
+    const id = document.getElementById('reservationId').value;
+    const formData = new FormData(document.getElementById('updateForm'));
+
+    
+  
+    fetch(`/accommodations/reservation/${id}/update`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'  // Django's CSRF token
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();  // Reload page to show updated data
+      } else {
+        alert('Error updating reservation');
+      }
+    });
+  } 
+
+
+  function confirmDelete(id) {
+    if (confirm('Are you sure you want to delete this reservation?')) {
+      deleteReservation(id);
+    }
+  }
+  
+  function deleteReservation(id) {
+    fetch(`/accommodations/reservation/${id}/delete`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}'  // Django's CSRF token
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();  // Reload page to reflect deletion
+      } else {
+        alert('Error deleting reservation');
+      }
+    });
+  }
+  
+  
+</script>
+
+
+{% endblock %}

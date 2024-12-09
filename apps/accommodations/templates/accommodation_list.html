@@ -1,0 +1,543 @@
+{% extends layout_path %} {% load static %} {% load i18n %} {% block content %}
+<div class="card">
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Accommodation List</h1>
+
+    <!-- Centered Search Bar -->
+    <div class="row mb-3 justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <input
+          type="text"
+          class="form-control"
+          id="searchInput"
+          placeholder="Search by name or location..."
+          aria-label="Search"
+        />
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs" id="accommodationTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link active"
+          id="hotels-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#hotels"
+          type="button"
+          role="tab"
+          aria-controls="hotels"
+          aria-selected="true"
+        >
+          Hotels
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="rentalHouses-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#rentalHouses"
+          type="button"
+          role="tab"
+          aria-controls="rentalHouses"
+          aria-selected="false"
+        >
+          Rental Houses
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="geminiSuggestions-tab" data-bs-toggle="tab" data-bs-target="#geminiSuggestions" type="button" role="tab" aria-controls="geminiSuggestions" aria-selected="false">
+            Gemini Suggestions
+        </button>
+      </li>
+    
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content mt-4" id="accommodationTabContent">
+      <!-- Hotels Tab -->
+      <div class="tab-pane fade show active" id="hotels" role="tabpanel" aria-labelledby="hotels-tab">
+        {% if hotels %}
+        <div class="row row-cols-1 row-cols-md-2 g-4" id="hotelsList">
+          {% for hotel in hotels %}
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              {% if hotel.photo %}
+              <img
+                src="{{ hotel.photo.url }}"
+                class="card-img-top"
+                alt="{{ hotel.name }}"
+                style="height: 200px; object-fit: cover"
+              />
+              {% endif %}
+              <div class="card-body">
+                <h5 class="card-title">{{ hotel.name }}</h5>
+                <p class="card-text">
+                  <i class="bi bi-geo-alt-fill me-2"></i><strong>Location:</strong> {{ hotel.location }}<br>
+                  <i class="bi bi-currency-dollar me-2"></i><strong>Price per Night:</strong> ${{ hotel.price_per_night }}<br>
+                  <i class="bi bi-door-open-fill me-2"></i><strong>Rooms:</strong> {{ hotel.num_rooms }}<br>
+                  <i class="bi bi-door-open-fill me-2"></i><strong>phone :</strong> {{ hotel.phone }}<br>
+                  <i class="bi bi-wifi me-2"></i><strong>Wi-Fi:</strong> {{ hotel.has_wifi|yesno:"Available,Not Available" }}<br>
+                  <i class="bi bi-water me-2"></i><strong>Pool:</strong> {{ hotel.has_pool|yesno:"Available,Not Available" }}
+                </p>
+                <button class="btn btn-primary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#bookingModal" data-name="{{ hotel.name }}" data-location="{{ hotel.location }}" data-accommodation-type="hotel" data-phone="{{ hotel.phone }}" data-price="{{ hotel.price_per_night }}"  > Book Now</button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No hotels available at the moment.</p>
+        {% endif %}
+      </div>
+
+      <!-- Rental Houses Tab -->
+      <div class="tab-pane fade" id="rentalHouses" role="tabpanel" aria-labelledby="rentalHouses-tab">
+        {% if rental_houses %}
+        <div class="row row-cols-1 row-cols-md-2 g-4" id="rentalHousesList">
+          {% for rental in rental_houses %}
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              {% if rental.photo %}
+              <img
+                src="{{ rental.photo.url }}"
+                class="card-img-top"
+                alt="{{ rental.name }}"
+                style="height: 200px; object-fit: cover"
+              />
+              {% endif %}
+              <div class="card-body">
+                <h5 class="card-title">{{ rental.name }}</h5>
+                <p class="card-text">
+                  <i class="bi bi-geo-alt-fill me-2"></i><strong>Location:</strong> {{ rental.location }}<br />
+                  <i class="bi bi-currency-dollar me-2"></i><strong>Price per Night:</strong> ${{ rental.price_per_night }}<br />
+                  <i class="bi bi-door-open-fill me-2"></i><strong>Bedrooms:</strong> {{ rental.num_bedrooms }}<br />
+                  <i class="bi bi-telephone-fill me-2"></i><strong>Phone:</strong> {{ rental.phone }}<br />
+                  <i class="bi bi-house-door-fill me-2"></i><strong>Kitchen:</strong> {{ rental.has_kitchen|yesno:"Available,Not Available" }}<br />
+                  <i class="bi bi-garage me-2"></i><strong>Garage:</strong> {{ rental.has_garage|yesno:"Available,Not Available" }}
+                </p>
+                <button
+                  class="btn btn-primary w-100 mt-3"
+                  data-bs-toggle="modal"
+                  data-bs-target="#bookingModal"
+                  data-name="{{ rental.name }}"
+                  data-location="{{ rental.location }}"
+                  data-accommodation-type="house"
+                  data-phone="{{ rental.phone }}"
+                  data-price="{{ rental.price_per_night }}"
+                >
+                  Book Now
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No rental houses available at the moment.</p>
+        {% endif %}
+      </div>
+      
+
+      
+      <!-- Gemini Suggestions Tab -->
+        <div class="tab-pane fade" id="geminiSuggestions" role="tabpanel" aria-labelledby="geminiSuggestions-tab">
+          <div class="container card mb-10">
+           
+            <form id="geminiForm" class="mt-3">
+              <div class="mb-3">
+                <label for="typeInput" class="form-label">Type of Accommodation</label>
+                <select class="form-control" id="typeInput">
+                  <option value="Hotel">Hotel</option>
+                  <option value="Rental House">Rental House</option>
+                  
+                </select>
+              </div>
+             
+              <!-- Location Input -->
+              <div class="mb-3">
+                <label for="locationInput" class="form-label">Location</label>
+                <input type="text" class="form-control" id="locationInput" placeholder="Enter location (e.g., city)">
+              </div>
+
+              <!-- Description Input -->
+              <div class="mb-3">
+                <label for="descriptionInput" class="form-label">Description</label>
+                <textarea class="form-control" id="descriptionInput" rows="3" placeholder="Enter any additional details"></textarea>
+              </div>
+
+               <!-- Date Inputs -->
+              <div class="mb-3 row">
+                  <div class="col-md-6">
+                      <label for="startDateInput" class="form-label">Start Date</label>
+                      <input type="date" class="form-control" id="startDateInput" placeholder="Start Date">
+                  </div>
+                  <div class="col-md-6">
+                      <label for="endDateInput" class="form-label">End Date</label>
+                      <input type="date" class="form-control" id="endDateInput" placeholder="End Date">
+                  </div>
+              </div>
+                <div class="mb-3">
+                  <label class="form-label">Amenities</label>
+                  <div style="padding: 8px; background-color: #f8f9fa; border-radius: 5px; display: flex; flex-wrap: wrap;">
+                      <!-- Common amenities -->
+                      <div class="form-check" style="margin-right: 20px; flex: 1 1 auto;">
+                          <input class="form-check-input" type="checkbox" value="Wi-Fi" id="wifiCheckbox" style="cursor: pointer;">
+                          <label class="form-check-label" for="wifiCheckbox" style="cursor: pointer;">
+                              <i class="fas fa-wifi" style="color: #17a2b8; margin-right: 5px;"></i>Wi-Fi
+                          </label>
+                      </div>
+                      <div class="form-check" style="margin-right: 20px; flex: 1 1 auto;">
+                          <input class="form-check-input" type="checkbox" value="Parking" id="parkingCheckbox" style="cursor: pointer;">
+                          <label class="form-check-label" for="parkingCheckbox" style="cursor: pointer;">
+                              <i class="fas fa-parking" style="color: #dc3545; margin-right: 5px;"></i>Parking
+                          </label>
+                      </div>
+                      <!-- Hotel-specific amenities -->
+                      <div class="form-check" style="margin-right: 20px; flex: 1 1 auto;">
+                          <input class="form-check-input" type="checkbox" value="Room Service" id="roomServiceCheckbox" style="cursor: pointer;">
+                          <label class="form-check-label" for="roomServiceCheckbox" style="cursor: pointer;">
+                              <i class="fas fa-concierge-bell" style="color: #6f42c1; margin-right: 5px;"></i>Room Service
+                          </label>
+                      </div>
+                      <!-- Rental house-specific amenities -->
+                      <div class="form-check" style="margin-right: 20px; flex: 1 1 auto;">
+                          <input class="form-check-input" type="checkbox" value="Kitchen" id="kitchenCheckbox" style="cursor: pointer;">
+                          <label class="form-check-label" for="kitchenCheckbox" style="cursor: pointer;">
+                              <i class="fas fa-utensils" style="color: #28a745; margin-right: 5px;"></i>Full Kitchen
+                          </label>
+                      </div>
+                      <!-- Adaptable amenities for both -->
+                      <div class="form-check" style="margin-right: 20px; flex: 1 1 auto;">
+                          <input class="form-check-input" type="checkbox" value="Pool" id="poolCheckbox" style="cursor: pointer;">
+                          <label class="form-check-label" for="poolCheckbox" style="cursor: pointer;">
+                              <i class="fas fa-swimming-pool" style="color: #007bff; margin-right: 5px;"></i>Pool (if available)
+                          </label>
+                      </div>
+                  </div>
+              </div>
+            
+            
+              <button type="button" class="btn btn-primary mb-5" onclick="submitGeminiPreferences()">Get Details</button>
+            </form>
+          </div>
+          
+          <div id="geminiResults" class="row mt-3">
+              <!-- Gemini suggestions will be loaded here -->
+          </div>
+        </div>
+    </div>
+    
+    </div>
+  </div>
+</div>
+
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bookingModalLabel">Book Accommodation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="bookingForm">
+          <div class="mb-3">
+            <label for="accommodationName" class="form-label">Accommodation</label>
+            <input type="text" class="form-control" id="accommodationName" readonly />
+          </div>
+          <div class="mb-3">
+            <label for="accommodationType" class="form-label">Accommodation Type</label>
+            <input type="text" class="form-control" id="accommodationType" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="phone" readonly>
+          </div>
+          
+
+          <div class="mb-3">
+            <label for="accommodationLocation" class="form-label">Location</label>
+            <input type="text" class="form-control" id="accommodationLocation" readonly />
+          </div>
+          <div class="mb-3">
+            <label for="startDate" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDate" name="start_date" required>
+          </div>
+          <div class="mb-3">
+            <label for="endDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" name="end_date" required>
+          </div>
+          <div class="mb-3">
+            <label for="numGuests" class="form-label">Number of Guests</label>
+            <input type="number" class="form-control" id="numGuests" min="1" required />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit Booking</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchInput');
+    const bookingModal = document.getElementById('bookingModal');
+    const bookingForm = document.getElementById('bookingForm');
+    const accommodationNameInput = document.getElementById('accommodationName');
+    const accommodationTypeInput = document.getElementById('accommodationType');
+    const accommodationLocationInput = document.getElementById('accommodationLocation');
+    const phoneInput = document.getElementById('phone');
+    
+    // Search functionality
+    searchInput.addEventListener('input', function () {
+      const query = searchInput.value.toLowerCase();
+      const activeTab = document.querySelector('.tab-pane.show.active');
+      const listId = activeTab.id === 'hotels' ? 'hotelsList' : 'rentalHousesList';
+      filterList(listId, query);
+    });
+
+    function filterList(listId, query) {
+      const list = document.getElementById(listId);
+      const items = list.getElementsByClassName('col');
+
+      Array.from(items).forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    let price = 0;
+    // Populate modal with data on button click
+    bookingModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const name = button.getAttribute('data-name');
+      const location = button.getAttribute('data-location');
+      const accommodation_type = button.getAttribute('data-accommodation-type');
+      const phone = button.getAttribute('data-phone');
+      const pricee = button.getAttribute('data-price');
+      console.log(accommodation_type);
+      price = pricee;
+      accommodationNameInput.value = name;
+      accommodationLocationInput.value = location;
+      accommodationTypeInput.value = accommodation_type;
+      phoneInput.value = phone;
+    });
+
+    // Submit booking form
+    bookingForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const formData = new FormData();
+      formData.append('accommodation_name', accommodationNameInput.value);
+      formData.append('accommodation_location', accommodationLocationInput.value);
+      formData.append('phone', phoneInput.value);
+      formData.append('start_date', document.getElementById('startDate').value); 
+      formData.append('end_date', document.getElementById('endDate').value); 
+      formData.append('num_guests', document.getElementById('numGuests').value);
+      formData.append('accommodation_type', document.getElementById('accommodationType').value);
+      // totale price of the reservation based on the number of days and the price per night
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
+      const numDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+      console.log(numDays , price);
+      const totalPrice = Math.floor(numDays * parseFloat(price));
+      console.log(totalPrice);
+      formData.append('total_price', totalPrice);
+
+      
+
+      fetch("{% url 'create_reservation' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Reservation successful!');
+            bookingModal.querySelector('.btn-close').click(); // Close the modal
+          } else {
+            alert('Error: ' + (data.error || 'Failed to create reservation.'));
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred. Please try again.');
+        });
+    });
+  });
+</script>
+
+
+<script>
+ 
+
+  function submitGeminiPreferences() {
+    const type = document.getElementById('typeInput').value;
+    const location = document.getElementById('locationInput').value;  // New location field
+    const description = document.getElementById('descriptionInput').value;  // New description field
+    const startDate = document.getElementById('startDateInput').value;  // New start date field
+    const endDate = document.getElementById('endDateInput').value;  // New end date field
+
+    const amenities = [];
+    if (document.getElementById('wifiCheckbox').checked) amenities.push('Wi-Fi');
+    if (document.getElementById('poolCheckbox').checked) amenities.push('Pool');
+    if (document.getElementById('parkingCheckbox').checked) amenities.push('Parking');
+    if (document.getElementById('roomServiceCheckbox').checked) amenities.push('Room Service');
+    if (document.getElementById('kitchenCheckbox').checked) amenities.push('Kitchen');
+
+
+    // Check if all necessary fields are filled
+    if (  !location || amenities.length === 0 || !startDate || !endDate ) {
+      alert('Please fill in all required fields and select at least one amenity.');
+      return;
+    }
+
+    const query = {
+      type: type,
+      location: location,  
+      description: description,  
+      amenities: amenities.join(', '),
+      startDate: startDate,  
+      endDate: endDate  
+
+    };
+
+    console.log(query);
+    var formattedQuery = `Please analyze the market for accommodations based on the following criteria and generate a structured JSON report:
+      - Type of Accommodation: ${type}
+      - Location: ${location}
+      - Amenities Included: ${amenities.join(', ')}
+      - Detailed Description: ${description}
+      - Start Date of Stay: ${startDate}
+      - End Date of Stay: ${endDate}
+
+      Required Data Points in JSON Format:
+      - "average_price_per_night": "Provide the average price per night for the specified period. Include estimates if exact data is unavailable."
+      - "general_availability": "Describe the general availability of accommodations. If specific data is lacking, provide a trend or expectation based on similar time frames."
+      - "pricing_trends": "Highlight any significant changes in pricing and availability over the specified period, with historical comparisons to illustrate trends."
+      - "impact_of_events": "Assess the impact of local events or seasons on pricing and availability, and provide a contextual analysis."
+      - "booking_recommendations": "Suggest the most cost-effective times for booking or propose alternatives for better rates."
+      - "customer_satisfaction": "Summarize customer satisfaction ratings and reviews for relevant accommodations. Provide a general sentiment analysis if detailed reviews are unavailable."
+
+      The response must adhere to this JSON structure to enable informed decision-making and strategic planning based on the provided criteria. The JSON should include both exact values and approximate insights where necessary.
+      If you lack information make up values that are approximate, don't give me give me unsure answers you should always sound sure and confident.
+      Don't add break lines, don't escape characters and give me a response in a single line, I want plain json response.`;
+
+
+
+    console.log(formattedQuery);
+    fetchGeminiSuggestions(formattedQuery);
+}
+
+  
+function fetchGeminiSuggestions(formattedQuery) {
+  console.log("Formatted fetch", formattedQuery);
+  fetch(`/accommodations/suggestions/?query=${formattedQuery}`)
+  .then(response => {
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Parse the response as JSON
+      return response.text();
+  })
+  .then(data => {
+    console.log("Raw response data: ", data);  // Log the raw data for debugging
+    //remove break lines and Quotation mark character escape  
+    data = data.replace(/(\r\n|\n|\r)/gm, "");
+    console.log("Formatted response data: ", data);  // Log the formatted data for debugging
+    var jsonData = JSON.parse(data); 
+    var formattedData = jsonData.candidates[0].content.parts[0].text;
+    console.log("Formatted JSON data: ", formattedData);  // Log the formatted data for debugging
+    var formattedDataJson = JSON.parse(formattedData);
+    console.log(formattedDataJson);  
+    
+    const resultsContainer = document.getElementById('geminiResults');
+    if (!resultsContainer) {
+        console.error('Results container not found');
+        return;
+    }
+    resultsContainer.innerHTML = '';  // Clear previous results
+
+    // Create a card for each key in the JSON object
+    // Iterate through each key in the JSON object and create a card
+for (const key in formattedDataJson) {
+  // Create the card container with additional styling
+  const card = document.createElement('div');
+  card.className = 'card mb-4 shadow-sm';  // Bootstrap shadow class for subtle shadow
+  card.style.cssText = 'border-radius: 10px; position: relative; overflow: hidden;';
+
+  // Add tick icon for each card
+  const tickIcon = document.createElement('i');
+  tickIcon.className = 'fas fa-check-circle';  // Font Awesome icon
+  tickIcon.style.cssText = 'position: absolute; top: 15px; right: 15px; color: #28a745; font-size: 20px;';
+
+  // Create the card body
+  const cardBody = document.createElement('div');
+  cardBody.className = 'card-body';
+  cardBody.style.padding = '20px';
+
+  // Add a gradient bar at the top of each card for visual style
+  const gradientBar = document.createElement('div');
+  gradientBar.style.cssText = 'height: 5px; background: linear-gradient(90deg, #6c757d, #007bff);';
+
+  // Create and style the title with a readable format
+  const title = document.createElement('h5');
+  title.className = 'card-title';
+  title.style.cssText = 'font-weight: bold; color: #007bff; text-transform: capitalize;';
+  title.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); // Convert key format
+
+  // Create and style the text with improved readability
+  const text = document.createElement('p');
+  text.className = 'card-text';
+  text.style.cssText = 'color: #555;';
+  text.textContent = formattedDataJson[key];  // Set text content to the value of each key
+
+  // Append elements to build the card
+  cardBody.appendChild(title);
+  cardBody.appendChild(text);
+  card.appendChild(gradientBar);
+  card.appendChild(cardBody);
+  card.appendChild(tickIcon);
+
+  // Add the completed card to the results container
+  resultsContainer.appendChild(card);
+}
+
+    
+})
+.catch(error => {
+    console.error('Error fetching Gemini suggestions:', error);
+    if (resultsContainer) {
+        resultsContainer.innerHTML = `<p>Error fetching suggestions: ${error.message}</p>`;
+    }
+});
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+</script>
+
+
+{% endblock %}
